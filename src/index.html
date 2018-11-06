@@ -24,6 +24,8 @@
       <button class="logout">로그아웃</button>
     </div>
     <table>
+      <!-- 게시물 제목 부분은 thead로 감싸고
+      게시물 내용은 tbody로 감쌌음 -->
       <thead>
         <tr>
           <td>번호</td>
@@ -31,6 +33,7 @@
           <td>작성자</td>
         </tr>
       </thead>
+      <!-- tbody안에 여러 게시물의 목록을 넣어줄 것임 -->
       <tbody class="post-list">
       </tbody>
     </table>
@@ -46,6 +49,7 @@
   </template>
 
   <!-- 게시물 등록/수정 폼 -->
+  <!-- 이 템플릿을 복사해서 post-list에 넣어줄 것임 -->
   <template id="post-form">
     <form class="post-form">
       <div class="field">
