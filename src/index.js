@@ -83,10 +83,11 @@ async function drawPostList() {
 // const res = await api.get("/posts?_embed=user");
 // const plstList = res.data
 // 를 1줄로 줄여서 씀
+// expand는 부모요소, embed는 자식요소
   const {data: postList} = await api.get('/posts?_expand=user')
 
   // 4. 내용 채우기
-  // 순회할 때forEach나 for...of 중에 한 가지 쓰면 됨
+  // 순회할 때 forEach나 for...of 중에 한 가지 쓰면 됨
   for (const postItem of postList) {
     // templates.postItem가져와서 복사하기
     //    <template id="post-item">
@@ -127,11 +128,91 @@ async function drawPostList() {
 
 async function drawPostDetail(postId) {
   // 1. 템플릿 복사
+  //  <div class="post-detail">
+  //    <h2 class="title" />
+  //    <p class="author-wrap">
+  //      작성자: <span class="author" />
+  //    </p>
+  //    <p class="body" />
+  //  </div>
+  const frag = document.importNode(templates.postDetail, true)
   // 2. 요소 선택
+  const titleEl = frag.querySelector('.title')
+  const authorEl = frag.querySelector('.author')
+  const bodyEl = frag.querySelector('.body')
+  const backEl = frag.querySelector('.back')
+  const commentListEl = frag.querySelector('.comment-list')
+
+
   // 3. 필요한 데이터 불러오기
+  // data라는 속성을 가지고 있는 객체에서 title, body속성을 가져와서 같은 자리에 저장하는 코드임
+  // 분해대입 안에서 또 분해대입을 사용할 수 있음
+  // 분해대입은 3중, 4중... 등등 중첩해서 계속 사용가능
+
+
+    //   <li class="comment-item">
+    //   <span class="author"></span>:
+    //   <span class="body"></span>
+    //   <button class="delete hidden">삭제</button>
+    // </li>을 불러와서 comment-list에 넣어줄 것임
+
+  const {data: {title, body, user, comments}} = await api.get('/posts/' + postId, {
+    params: {
+      _expand: 'user',
+      _embed: 'comments',
+      _page: 1,
+      _limit: 15
+    }
+  })
   // 4. 내용 채우기
+  titleEl.textContent = title
+  bodyEl.textContent = body
+  authorEl.textContent = user.username
+
+  // 댓글 표시
+  // comments에 서버로부터 응답받은 배열이 들어있음
+  for (const commentItem of comments) {
+
+// 페이지 그리는 함수 작성 순서
+// 1. 템플릿 복사
+    const frag = document.importNode(templates.commentItem, true)
+// 2. 요소 선택
+    const authorEl = frag.querySelector('.author')
+    const bodyEl = frag.querySelector('.body')
+    const deleteEl = frag.querySelector('.delete')
+
+// 3. 필요한 데이터 불러오기 - 필요 없음(우선 넘어가셨음)
+
+// 4. 내용 채우기
+//  "comments": [
+//         {
+//             "id": 1,
+//             "userId": 2,
+//             "postId": 1,
+//             "body": "도움이 되는 글이네요!"
+//         }
+//     ]
+    bodyEl.textContent = commentItem.body
+
+
+// 5. 이벤트 리스너 등록하기
+// 6. 템플릿을 문서에 삽입
+    commentListEl.appendChild(frag)
+
+
+  }
+
+
   // 5. 이벤트 리스너 등록하기
+  // 뒤로 가기 버튼 누르면, 게시물 목록을 보여준다.
+  backEl.addEventListener('click', e => {
+    drawPostList();
+  })
+
+
   // 6. 템플릿을 문서에 삽입
+  rootEl.textContent = ''
+  rootEl.appendChild(frag);
 }
 
 async function drawNewPostForm() {
