@@ -74,7 +74,7 @@ async function drawPostList() {
   // 2. 요소 선택
   //tbody를 선택한 것임
   const listEl = frag.querySelector('.post-list')
-
+  const createEl = frag.querySelector('.create')
   // 3. 필요한 데이터 불러오기
   // 분해대입
   // const {data}:res.data라는 속성을 미리 꺼내와서 넣을 수 있다.
@@ -116,6 +116,9 @@ async function drawPostList() {
     listEl.appendChild(frag);
   }
   // 5. 이벤트 리스너 등록하기
+  createEl.addEventListener('click', e => {
+    drawNewPostForm();
+  })
   // 6. 템플릿을 문서에 삽입
   rootEl.textContent = ''
   rootEl.appendChild(frag)
@@ -136,13 +139,16 @@ async function drawPostDetail(postId) {
   //    <p class="body" />
   //  </div>
   const frag = document.importNode(templates.postDetail, true)
+
+
   // 2. 요소 선택
   const titleEl = frag.querySelector('.title')
   const authorEl = frag.querySelector('.author')
   const bodyEl = frag.querySelector('.body')
   const backEl = frag.querySelector('.back')
   const commentListEl = frag.querySelector('.comment-list')
-
+  const commentFormEl = frag.querySelector(".comment-form")
+  const updateEl = frag.querySelector('.update')
 
   // 3. 필요한 데이터 불러오기
   // data라는 속성을 가지고 있는 객체에서 title, body속성을 가져와서 같은 자리에 저장하는 코드임
@@ -239,6 +245,21 @@ async function drawPostDetail(postId) {
     drawPostList();
   })
 
+  updateEl.addEventListener('click', e => {
+    drawEditPostForm(postId);
+  })
+
+  commentFormEl.addEventListener('submit', async e => {
+    e.preventDefault();
+    const body = e.target.elements.body.value
+    await api.post(`/posts/${postId}/comments`, {
+      // 요청에 실어서 보낼 정보 적어주기
+      body
+    })
+    // 서버에 댓글이 추가가 잘 되었을 때 실행할 코드
+    drawPostDetail(postId);
+  })
+
 
   // 6. 템플릿을 문서에 삽입
   rootEl.textContent = ''
@@ -247,20 +268,87 @@ async function drawPostDetail(postId) {
 
 async function drawNewPostForm() {
   // 1. 템플릿 복사
+  const frag = document.importNode(templates.postForm, true)
   // 2. 요소 선택
+  const formEl = frag.querySelector('.post-form')
+  const backEl = frag.querySelector('.back')
+
   // 3. 필요한 데이터 불러오기
+
   // 4. 내용 채우기
   // 5. 이벤트 리스너 등록하기
+  formEl.addEventListener('submit', async e => {
+    e.preventDefault();
+/* <div class="field">
+  <label>내용</label>
+  <textarea class="body" name="body" cols="30" rows="10" />
+</div>; */
+    const title = e.target.elements.title.value
+    const body = e.target.elements.body.value
+    await api.post('/posts', {
+      title, body
+    })
+    // 요청에 성공했다면 코드의 실행흐름이 이쪽으로 올 테니까
+    // 요청에 성공했을 때 실행할 코드 적어주기
+    drawPostList();
+
+  })
+  backEl.addEventListener('click', e => {
+    // form안에 들어있는 버튼은 기본적으로 form을 전송시키는 기본 동작이 내장되어 있다.
+    // form안에 있는 버튼을 클릭했을 때, 각별히 주의해야 함!!!
+    // 따라서 from안에 있는 버튼이 가지고 있는 기본 동작. 즉, 전송시키는 기본 동작을 무력화
+    // 해야 한다 -> e.preventDefault();를 drawPostList() 위에 써줘야 함
+    drawPostList();
+  })
   // 6. 템플릿을 문서에 삽입
+  rootEl.textContent = '';
+  rootEl.appendChild(frag);
 }
 
 async function drawEditPostForm(postId) {
-  // 1. 템플릿 복사
+   // 1. 템플릿 복사
+  const frag = document.importNode(templates.postForm, true)
   // 2. 요소 선택
+  const formEl = frag.querySelector('.post-form')
+  const backEl = frag.querySelector('.back')
+  const titleEl = frag.querySelector('.title')
+  const bodyEl = frag.querySelector('.body')
+
   // 3. 필요한 데이터 불러오기
+  const {data: {title, body}} = await api.get('/posts/' + postId)
   // 4. 내용 채우기
+  // input이나 textarea 태그에 값 넣기 -> value속성에 값을 넣으면 됨
+  titleEl.value = title
+  bodyEl.value = body
+
   // 5. 이벤트 리스너 등록하기
+  formEl.addEventListener('submit', async e => {
+    e.preventDefault();
+/* <div class="field">
+  <label>내용</label>
+  <textarea class="body" name="body" cols="30" rows="10" />
+</div>; */
+    const title = e.target.elements.title.value
+    const body = e.target.elements.body.value
+    await api.patch('/posts/' + postId, {
+      title,
+      body
+    })
+    // 요청에 성공했다면 코드의 실행흐름이 이쪽으로 올 테니까
+    // 요청에 성공했을 때 실행할 코드 적어주기
+    drawPostList();
+
+  })
+  backEl.addEventListener('click', e => {
+    // form안에 들어있는 버튼은 기본적으로 form을 전송시키는 기본 동작이 내장되어 있다.
+    // form안에 있는 버튼을 클릭했을 때, 각별히 주의해야 함!!!
+    // 따라서 from안에 있는 버튼이 가지고 있는 기본 동작. 즉, 전송시키는 기본 동작을 무력화
+    // 해야 한다 -> e.preventDefault();를 drawPostList() 위에 써줘야 함
+    drawPostList();
+  })
   // 6. 템플릿을 문서에 삽입
+  rootEl.textContent = '';
+  rootEl.appendChild(frag);
 }
 
 // 페이지 로드 시 그릴 화면 설정
