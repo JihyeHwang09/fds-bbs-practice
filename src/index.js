@@ -156,14 +156,37 @@ async function drawPostDetail(postId) {
     //   <button class="delete hidden">삭제</button>
     // </li>을 불러와서 comment-list에 넣어줄 것임
 
+    // 이 코드 작성 시점에는 comments가 몇 개 인지 모른다
+    // -> comments를 요청해서 응답으로 오는 배열의 길이를 알 수 없다
   const {data: {title, body, user, comments}} = await api.get('/posts/' + postId, {
     params: {
       _expand: 'user',
-      _embed: 'comments',
-      _page: 1,
-      _limit: 15
+      _embed: 'comments'
+
+
+      // _page: 1,
+      // _limit: 15
     }
   })
+  // 사용자 여러 명의 정보를 불러오고 싶다.
+  const params = new URLSearchParams();
+  // comments 배열을 순회하면서 params에 id queryString을 붙여준다
+  comments.forEach( c => {
+    params.append('id', c.userId )
+  })
+  // userList에는 댓글 작성자만 모여있는 배열이 들어가는 것임(userId들이 들어있는 배열)
+
+  // const res =  await api.get('/users', {
+  //   params
+  // })
+  // const userList = res.data
+  // 를 1줄로 줄인 코드
+
+  // userList에는 user들의 정보가 들어있음
+  const {data: userList} = await api.get('/users', {
+    params
+  })
+
   // 4. 내용 채우기
   titleEl.textContent = title
   bodyEl.textContent = body
@@ -172,6 +195,8 @@ async function drawPostDetail(postId) {
   // 댓글 표시
   // comments에 서버로부터 응답받은 배열이 들어있음
   for (const commentItem of comments) {
+    // 지금 현재 그리고 있는 댓글 데이터가 commentItem에 들어있음
+// commentItem.userId에는 작성자 id가 들어있음
 
 // 페이지 그리는 함수 작성 순서
 // 1. 템플릿 복사
@@ -193,6 +218,11 @@ async function drawPostDetail(postId) {
 //         }
 //     ]
     bodyEl.textContent = commentItem.body
+    // userList가 배열이니까 find메소드 사용가능
+
+    // 댓글 작성자 객체를 찾아서 user라는 변수에 넣어줌
+    const user = userList.find(item => item.id === commentItem.userId)
+    authorEl.textContent = user.username
 
 
 // 5. 이벤트 리스너 등록하기
